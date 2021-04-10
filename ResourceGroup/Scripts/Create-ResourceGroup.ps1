@@ -2,14 +2,15 @@ param (
     [Parameter(Mandatory = $true)]
     [String]
     $Name,
+
     [Parameter(Mandatory = $true)]
     [string]
     $Location
 )
 
-$resourceGroup = $(az group list --query "[?name=='$Name']")
+$resourceGroup = $(az group exists --resource-group $Name)
 
-if ($resourceGroup -eq "[]") {
+if (!$resourceGroup) {
     az group create --name $Name --location $Location --output tsv
 }
 else {
