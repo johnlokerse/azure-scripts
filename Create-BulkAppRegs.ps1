@@ -7,6 +7,7 @@ param (
 
 foreach ($appReg in $AppRegNames) {
     [string] $appRegId = az ad app create --display-name $appReg --query "appId"
+    az ad sp create-for-rbac --name $appReg --skip-assignment
     Write-Host "Created appreg: $appReg"
 
     foreach ($owner in $Owners) {
