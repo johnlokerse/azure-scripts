@@ -1,3 +1,15 @@
+<#
+.SYNOPSIS
+    Performs actions to create Azure AD Application Registrations with Service Principals
+.EXAMPLE
+    PS> .\Create-BulkAppRegs.ps1 -Owners "john.doe@something.nl", "jane.doe@something.nl" -AppRegNames "AppRegNameA", "AppRegNameP"
+
+    Creates application registrations AppRegNameA and AppRegNameP. After creating these the owners john.doe and jane.doe are added to these application registrations.
+.PARAMETER Owners
+    This describes the owners that need to be added to the appregistration. [array]
+.PARAMETER AppRegNames
+    This describes the appregistrations that need to be created. [array]
+#>
 param (
     [Parameter(Mandatory = $true)]
     [string[]] $Owners,
@@ -19,6 +31,3 @@ foreach ($appReg in $AppRegNames) {
     az ad app owner remove --id $appRegId --owner-object-id $(az ad signed-in-user show --query "objectId")
     Write-Host "Removed myself as owner"
 }
-
-# Example
-# .\Create-BulkAppRegs.ps1 -Owners "john.doe@something.nl", "jane.doe@something.nl" -AppRegNames "AppRegNameA", "AppRegNameP"
