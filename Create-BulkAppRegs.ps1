@@ -6,9 +6,9 @@
 
     Creates application registrations AppRegNameA and AppRegNameP. After creating these the owners john.doe and jane.doe are added to these application registrations.
 .PARAMETER Owners
-    This describes the owners that need to be added to the appregistration. [array]
+    This describes the owners that need to be added to the application registrations. [array]
 .PARAMETER AppRegNames
-    This describes the appregistrations that need to be created. [array]
+    This describes the application registrations that need to be created. [array]
 #>
 param (
     [Parameter(Mandatory = $true)]
