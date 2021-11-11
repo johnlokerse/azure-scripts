@@ -4,4 +4,4 @@ param (
     $GroupName
 )
 
-az ad group show -g $GroupName --query "[].{Name: displayName, ObjectID: objectId, LastSync: lastDirSyncTime}"
+az ad group show -g $GroupName --query "{Name: displayName, ObjectID: objectId, LastSync: lastDirSyncTime}"
