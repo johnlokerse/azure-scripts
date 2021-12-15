@@ -17,10 +17,36 @@ param (
     [String[]] $AppRegNames
 )
 
+function Remove-GeneratedSecret {
+    param (
+        [string]
+        [ValidateNotNullOrEmpty()]
+        $Id
+    )
+
+    $rbacObject = (az ad sp credential list --id $id --query "[?customKeyIdentifier == 'rbac']" | ConvertFrom-Json)
+    if (! [String]::IsNullOrEmpty($rbacObject.customKeyIdentifier)) {
+        Write-Host "Removing default secret"
+        az ad sp credential delete --id $id --key-id $rbacObject.keyId
+    }
+}
+
+function Set-AnnounceMessage {
+    param (
+        [string]
+        [ValidateNotNullOrEmpty()]
+        $Msg
+    )
+
+    Write-Host -ForegroundColor Yellow -Message $Msg
+}
+
 foreach ($appReg in $AppRegNames) {
-    [string] $appRegId = az ad app create --display-name $appReg --query "appId"
-    az ad sp create-for-rbac --name $appReg --skip-assignment
-    Write-Host "Created appreg: $appReg"
+    Set-AnnounceMessage -Msg "----------- Start $appReg -----------"
+
+    [string] $appRegId = (az ad app create --display-name $appReg --only-show-errors --query "appId" ).Trim('"')
+    az ad sp create-for-rbac --name $appReg --skip-assignment --only-show-errors --output none
+    Write-Host "Created app registration: $appReg with ID $appRegId"
 
     foreach ($owner in $Owners) {
         [string] $ownerId = az ad user show --id $owner --query "objectId"
@@ -28,6 +54,7 @@ foreach ($appReg in $AppRegNames) {
         Write-Host "$owner added as owner"
     }
 
-    az ad app owner remove --id $appRegId --owner-object-id $(az ad signed-in-user show --query "objectId")
-    Write-Host "Removed myself as owner"
+    Remove-GeneratedSecret -Id $appRegId
+
+    Set-AnnounceMessage -Msg "----------- End $appReg -----------"
 }
