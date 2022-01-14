@@ -15,6 +15,7 @@ class ServicePrincipal {
 class ServicePrincipalOwner {
     [string] $displayName
     [string] $mail
+    [bool] $accountEnabled
 }
 
 class ServicePrincipalSecrets {
@@ -23,6 +24,32 @@ class ServicePrincipalSecrets {
     [string] $endDate
 }
 
+function Show-Overview {
+    param (
+        [ServicePrincipal] $PrincipalInfo,
+        [ServicePrincipalOwner[]] $OwnerInfo,
+        [ServicePrincipalSecrets[]] $SecretsInfo
+    )
+
+    if ($null -ne $PrincipalInfo) {
+        Write-Host "----------- Service Principal information -----------" -ForegroundColor Yellow
+        $PrincipalInfo | Format-Table
+    }
+
+    if ($OwnerInfo.count -gt 0) {
+        Write-Host "----------- Owners -----------" -ForegroundColor Yellow
+        $OwnerInfo | Format-Table
+    }
+
+    if ($SecretsInfo.Count -gt 0) {
+        Write-Host "----------- Secrets -----------" -ForegroundColor Yellow
+        $SecretsInfo | Format-Table
+    }
+}
+
+Clear-Host
+az cache purge
+
 [ServicePrincipal] $sp = az ad sp list --display-name $DisplayName | ConvertFrom-Json | Select-Object -Property displayName, appId, objectId, accountEnabled
 if ($null -eq $sp -or [string]::IsNullOrEmpty($sp.appId)) {
     Write-Error -Message "Service Principal $DisplayName was not found."
@@ -30,14 +57,14 @@ if ($null -eq $sp -or [string]::IsNullOrEmpty($sp.appId)) {
 
 [ServicePrincipalOwner[]] $owners = @()
 az ad sp owner list --id $sp.appId | ConvertFrom-Json | ForEach-Object {
-    [ServicePrincipalOwner] $userOwner = $_ | Select-Object -Property displayName, mail
+    [ServicePrincipalOwner] $userOwner = $_ | Select-Object -Property displayName, mail, accountEnabled
     $owners += $userOwner
 }
 
-[ServicePrincipalSecrets[]] $secrets  = @()
+[ServicePrincipalSecrets[]] $secrets = @()
 az ad sp credential list --id $sp.appId | ConvertFrom-Json | ForEach-Object {
     [ServicePrincipalSecrets] $secret = $_ | Select-Object -Property keyId, startDate, endDate
     $secrets += $secret
 }
 
-$owners
+Show-Overview -PrincipalInfo $sp -OwnerInfo $owners -SecretsInfo $secrets
